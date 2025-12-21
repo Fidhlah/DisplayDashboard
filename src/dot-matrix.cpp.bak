@@ -1,0 +1,55 @@
+#include <MD_Parola.h>
+#include <MD_MAX72xx.h>
+#include <SPI.h>
+
+#define HARDWARE_TYPE MD_MAX72XX::FC16_HW
+#define MAX_DEVICES 4
+#define CS_PIN 5
+
+MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
+
+int jam = 0;
+int menit = 0;
+int detik = 0;
+unsigned long lastSecond = 0;
+bool showColon = true;
+
+void setup() {
+  P.begin();
+  P.setTextAlignment(PA_CENTER); // Teks otomatis di tengah
+  P.setIntensity(0);             // Intensitas terendah, aman untuk mata & daya
+  P.displayClear();
+}
+
+void loop() {
+  // 1. Logika Perhitungan Waktu (Interval 1000ms / 1 Detik)
+  if (millis() - lastSecond >= 1000) {
+    lastSecond = millis();
+    detik++;
+    
+    // Toggle status titik dua agar berkedip
+    showColon = !showColon; 
+
+    if (detik >= 60) {
+      detik = 0;
+      menit++;
+    }
+    if (menit >= 60) {
+      menit = 0;
+      jam++;
+    }
+
+    // 2. Formatting String MM:SS
+    char timeString[10];
+    if (showColon) {
+      // Menampilkan Menit dan Detik dengan pemisah titik dua
+      sprintf(timeString, "%02d:%02d", menit, detik);
+    } else {
+      // Menghilangkan titik dua (diganti spasi) agar terlihat kedip
+      sprintf(timeString, "%02d %02d", menit, detik);
+    }
+
+    // 3. Update Tampilan ke Dot Matrix
+    P.print(timeString);
+  }
+}

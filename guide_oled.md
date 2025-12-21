@@ -1,0 +1,11 @@
+| Nama Fungsi | Parameter Utama (Detail Breakdown) | Tip Advisor (Brutally Honest) | Contoh Penggunaan |
+|---|---|---|---|
+| drawBitmap | x, y: Titik pojok kiri-atas icon. bitmap: Nama variabel byte array. w, h: Lebar & tinggi icon (harus pas dengan data array). color: Warna pixel (WHITE/BLACK). | Kalau w dan h beda 1 pixel aja dari data aslinya, icon kamu bakal terlihat "miring" atau hancur. | `display.drawBitmap(0, 0, logo_wifi, 16, 16, WHITE);` |
+| drawFastHLine | x, y: Titik awal garis. w: Panjang garis ke arah kanan. color: Warna garis. | Gunakan ini untuk garis horizontal. Ini jauh lebih cepat dari drawLine karena library nggak perlu hitung kemiringan. | `display.drawFastHLine(0, 12, 128, WHITE);` |
+| drawFastVLine | x, y: Titik awal garis. h: Panjang garis ke arah bawah. color: Warna garis. | Sama seperti HLine, tapi vertikal. Cocok untuk kolom pemisah data. | `display.drawFastVLine(64, 15, 40, WHITE);` |
+| drawRect | x, y: Titik pojok kiri-atas kotak. w, h: Lebar & tinggi. color: Warna garis tepi. | Titik jangkarnya di pojok kiri atas. Kalau x + w > layar, kotak bakal "tumpah" keluar layar. | `display.drawRect(10, 10, 50, 20, WHITE);` |
+| drawRoundRect | x, y, w, h: Sama seperti Rect. radius: Jari-jari lengkungan di sudut (px). color: Warna garis. | Radius jangan lebih besar dari setengah w atau h, atau bentuknya bakal aneh. | `display.drawRoundRect(2, 2, 124, 60, 4, WHITE);` |
+| drawCircle | x, y: Koordinat titik pusat lingkaran. radius: Jarak dari pusat ke tepi. color: Warna garis. | (x,y) adalah tengahnya. Pastikan radius tidak membuat lingkaran keluar layar. | `display.drawCircle(64, 32, 20, WHITE);` |
+| drawCircleHelper | x, y, r: Titik pusat & radius. corner: Kuadran yang digambar (1=RB, 2=RT, 4=LT, 8=LB). color: Warna garis. | Berguna untuk busur/seperempat lingkaran; gabungkan bit corner untuk kombinasi. | `display.drawCircleHelper(10, 10, 5, 4, WHITE);` |
+| drawTriangle | x0,y0; x1,y1; x2,y2: Tiga sudut segitiga. color: Warna garis. | Tidak ada titik pusat otomatis—tetapkan semua koordinat sudut dengan teliti. | `display.fillTriangle(110, 20, 115, 10, 120, 20, WHITE);` |
+| drawLine | x0,y0: Titik awal. x1,y1: Titik akhir. color: Warna garis. | Hanya pakai untuk garis miring (diagonal). Garis miring lebih mahal secara komputasi. | `display.drawLine(64, 32, 80, 10, WHITE);` |

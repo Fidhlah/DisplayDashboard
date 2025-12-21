@@ -1,0 +1,107 @@
+#include <Arduino.h>
+#include <DHT.h>
+#include <WiFi.h>
+#include "include/Timer.h"
+#include "include/DebugMacros.h"
+#include "time.h"
+#include <Wire.h>
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+
+// DHT 22
+#define DHT_PIN 14
+DHT dht(DHT_PIN, DHT22);
+Timer printDHT(10000);
+
+// WiFI
+const char *ssid_wifi = "RumahBapa_3";
+const char *pw_wifi = "kurupukseblak";
+void initWiFi();
+
+// Clock it
+const char *ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = 7 * 3600;
+const int daylightOffset_sec = 0; // Indonesia tidak pakai Daylight Saving
+int lastMinute = -1;              // Menyimpan menit terakhir yang ditampilkan
+void printLocalTime();
+Timer printClock(1000);
+
+// Touch
+bool touched = false;
+int thresholdTouched = 35;
+int thresholdReleased = 50;
+Timer printTouch(1000);
+unsigned long howlongtouched = 0;
+
+// Start
+void setup()
+{
+  debugBegin(115200);
+  dht.begin();
+  initWiFi();
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  delay(1000);
+}
+
+void loop(){
+  int currentTouch = touchRead(4);
+
+  if (printClock.isReady()) printLocalTime();
+
+  if (printDHT.isReady()){
+    float humid = dht.readHumidity();
+    float temp = dht.readTemperature();
+
+    if (isnan(humid) || isnan(temp)){
+      debugPrintln("Gagal baca sensor");
+    }
+    else{
+      debugPrintf("Humidity: %f | Temperature: %f\n", humid, temp);
+    }
+  }
+
+  if(currentTouch  < thresholdTouched && touched== false){
+    debugPrintf("Disentuh! ");
+    touched = true;
+    howlongtouched = millis();
+  }
+
+  if(currentTouch  > thresholdReleased && touched == true) {
+    debugPrintf("Dilepas\n");
+    touched = false;
+    debugPrint("Disentuh selama: ");
+    debugPrintln(millis() - howlongtouched);
+  }
+}
+
+void initWiFi()
+{
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid_wifi, pw_wifi);
+  debugPrintf("Connecting to %s\n", ssid_wifi);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    debugPrint('.');
+    delay(1000);
+  }
+  debugPrintln("");
+}
+
+void printLocalTime()
+{
+  struct tm timeinfo;
+
+  if (!getLocalTime(&timeinfo))
+  {
+    debugPrintln("Failed!");
+    return;
+  }
+
+  if (timeinfo.tm_min != lastMinute)
+  {
+    debugPrintf("Jam: %02d:%02d\n", timeinfo.tm_hour, timeinfo.tm_min);
+    lastMinute = timeinfo.tm_min;
+  }
+}

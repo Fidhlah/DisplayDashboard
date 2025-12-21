@@ -6,27 +6,29 @@
 #include "time.h"
 #include <Wire.h>
 #include <SPI.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+// #include <Adafruit_GFX.h>
+// #include <Adafruit_SH1106.h>
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
 #include <SPI.h>
+#include "include/DisplayManager.h"
+#include "include/LogicManager.h"
 
 // ------------- WiFI -------------------------------------------------------------------------------------------------
 const char *ssid_wifi = "RumahBapa_3";
 const char *pw_wifi = "kurupukseblak";
-void initWiFi();
 
 // ------------- DHT 22 -----------------------------------------------------------------------------------------------
 #define DHT_PIN 14
 DHT dht(DHT_PIN, DHT22);
 Timer printDHT(10000);
+float temperature = 0.0;
+float humidity = 0.0;
 
 // ------------- Clock -----------------------------------------------------------------------------------------------
 const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 7 * 3600;
 const int daylightOffset_sec = 0; // Indonesia tidak pakai Daylight Saving
-void printLocalTime();
 Timer printClock(1000);
 bool showColon = true; 
 
@@ -36,6 +38,27 @@ bool showColon = true;
 #define CS_PIN 5
 MD_Parola Dmatrix = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
+// ------------- OLED Display -----------------------------------------------------------------------------------------------
+Adafruit_SH1106 display(-1); 
+Timer breathEffect(80);
+Timer updateTrend(30000);
+
+// Variabel animasi
+int animFrame = 0;
+unsigned long lastUpdate = 0;
+int breatheOffset = 0;
+bool breatheUp = true;
+
+
+// Data sebelumnya untuk trend
+float prevTemperature = 0.0;
+float prevHumidity = 0.0;
+unsigned long lastTrendUpdate = 0;
+const unsigned long TREND_INTERVAL = 30000;
+
+
+unsigned long onhowlong=0; 
+
 // ------------- Touch Sensor -----------------------------------------------------------------------------------------------
 bool touched = false;
 int thresholdTouched = 35;
@@ -44,43 +67,70 @@ Timer printTouch(1000);
 unsigned long howlongtouched = 0;
 
 
-
 // Start
 void setup(){
   debugBegin(115200);
   dht.begin();
+  
+  // Setup Oled
+  display.begin(SH1106_SWITCHCAPVCC, 0x3C); 
+  display.clearDisplay();
+  display.display();
+
+  // Setup Dot Matrix
   Dmatrix.begin();
   Dmatrix.setTextAlignment(PA_CENTER); 
   Dmatrix.setIntensity(0);             
   Dmatrix.displayClear();
-  Dmatrix.print("Wait!");
-  initWiFi();
   
-  // Clock
+  initWiFi(ssid_wifi, pw_wifi, Dmatrix);
+  delay(1000);
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   
   Dmatrix.displayClear();
-  delay(1000);
+  
+  delay(500);
 }
 
 void loop(){
   int currentTouch = touchRead(4);
+  unsigned long currentTime = millis();
 
-  if (printClock.isReady()){
-    showColon = (showColon == false) ? true : false;
-    printLocalTime();
+  if (printDHT.isReady()) {
+    temperature = dht.readTemperature();
+    humidity = dht.readHumidity();
+    // Update trend secara rasionil di sini
+    prevHumidity = humidity;
+    prevTemperature = temperature;
   }
 
-  if (printDHT.isReady()){
-    float humid = dht.readHumidity();
-    float temp = dht.readTemperature();
+  // 2. VISUAL RENDERING (Tiap 80ms) - SATU-SATUNYA TEMPAT UNTUK OLED
+  if (breathEffect.isReady()) {
+    // Logika animasi
+    if (breatheUp) {
+      breatheOffset++;
+      if (breatheOffset >= 3) breatheUp = false;
+    } else {
+      breatheOffset--;
+      if (breatheOffset <= 0) breatheUp = true;
+    }
+    animFrame++;
 
-    if (isnan(humid) || isnan(temp)){
-      debugPrintln("Gagal baca sensor");
-    }
-    else{
-      debugPrintf("Humidity: %f | Temperature: %f\n", humid, temp);
-    }
+    // PROSES DRAWING (Wajib di dalam sini!)
+    display.clearDisplay(); 
+    display.setTextColor(WHITE);
+    
+    drawDecorativeDots(display, animFrame);
+    drawTemperatureSection(display, prevTemperature, temperature, breatheOffset);
+    drawHumiditySection(display, prevHumidity, humidity, breatheOffset);
+    
+    display.display(); // Tampilkan HANYA setelah selesai menggambar
+  }
+
+  // 3. DOT MATRIX (Tiap 1 detik)
+  if (printClock.isReady()) {
+    showColon = !showColon;
+    printLocalTime(Dmatrix, showColon);
   }
 
   if(currentTouch  < thresholdTouched && touched== false){
@@ -95,40 +145,4 @@ void loop(){
     debugPrint("Disentuh selama: ");
     debugPrintln(millis() - howlongtouched);
   }
-}
-
-void initWiFi()
-{
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid_wifi, pw_wifi);
-  debugPrintf("Connecting to %s\n", ssid_wifi);
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    debugPrint('.');
-    delay(1000);
-  }
-  debugPrintln("");
-}
-
-void printLocalTime()
-{
-  struct tm timeinfo;
-
-  if (!getLocalTime(&timeinfo)){
-    Dmatrix.print("Failed!");
-    debugPrintln("Failed!");
-    return;
-  }
-  char timeString[10];
-  if (showColon) {
-    // Menampilkan Menit dan Detik dengan pemisah titik dua
-    sprintf(timeString, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
-  } else {
-    // Menghilangkan titik dua (diganti spasi) agar terlihat kedip
-    sprintf(timeString, "%02d %02d", timeinfo.tm_hour, timeinfo.tm_min);
-  }
-
-  // 3. Update Tampilan ke Dot Matrix
-  Dmatrix.print(timeString);
-  
 }

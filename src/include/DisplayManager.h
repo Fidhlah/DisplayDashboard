@@ -42,6 +42,8 @@ void drawDropletIcon(Adafruit_SH1106 &display, int x, int y) {
 
 void drawTrendIndicator(Adafruit_SH1106 &display, int x, int y, float currentVal, float prevVal) {
   float diff = currentVal - prevVal;
+  debugPrint("trend: ");
+  debugPrintln(diff);
   int arrowX = x + 8;
   int arrowY = y + 5;
   
@@ -74,8 +76,7 @@ void drawTrendIndicator(Adafruit_SH1106 &display, int x, int y, float currentVal
   }
 }
 
-void drawTemperatureSection(Adafruit_SH1106 &display, float prevTemperature, float temperature, int breathe) {
-  debugPrintf("prevTemp: %0.2f  | currTemp: %0.2f\n", prevTemperature, temperature);
+void drawTemperatureContainer(Adafruit_SH1106 &display, int breathe) {
   int boxWidth = 62;
   int boxHeight = 58;
   int boxX = 1;
@@ -92,6 +93,14 @@ void drawTemperatureSection(Adafruit_SH1106 &display, float prevTemperature, flo
   display.setCursor(boxX + 20, boxY + 5);
   display.print("TEMP");
   
+}
+
+void updateTempDisplay(Adafruit_SH1106 &display, float temperature){
+  // debugPrintf("UpdateTemp: %0.2f\n", temperature);
+  int boxWidth = 62;
+  int boxX = 1;
+  int boxY = 3;
+
   // Nilai temperature BESAR di tengah
   display.setTextSize(2);
   char tempStr[6];
@@ -99,16 +108,11 @@ void drawTemperatureSection(Adafruit_SH1106 &display, float prevTemperature, flo
   int textWidth = strlen(tempStr) * 12;
   display.setCursor(boxX + (boxWidth - textWidth)/2, boxY + 18);
   display.print(tempStr);
-  
-  // Trend indicator di bawah
-  drawTrendIndicator(display, boxX + 3, boxY + 42, temperature, prevTemperature);
 }
 
 
 
-
-void drawHumiditySection(Adafruit_SH1106 &display,float prevHumidity,float humidity,int breathe) {
-  debugPrintf("prevHumid: %0.2f | currHumid: %0.2f\n", prevHumidity, humidity);
+void drawHumidityContainer(Adafruit_SH1106 &display,int breathe) {
   int boxWidth = 62;
   int boxHeight = 58;
   int boxX = 65;
@@ -125,6 +129,14 @@ void drawHumiditySection(Adafruit_SH1106 &display,float prevHumidity,float humid
   display.setCursor(boxX + 20, boxY + 5);
   display.print("HUMID");
   
+}
+
+void updateHumidDisplay(Adafruit_SH1106 &display, float humidity){
+  int boxWidth = 62;
+  int boxHeight = 58;
+  int boxX = 65;
+  int boxY = 3;
+  
   // Nilai humidity BESAR di tengah
   display.setTextSize(2);
   char humidStr[6];
@@ -132,9 +144,6 @@ void drawHumiditySection(Adafruit_SH1106 &display,float prevHumidity,float humid
   int textWidth = strlen(humidStr) * 12;
   display.setCursor(boxX + (boxWidth - textWidth)/2, boxY + 18);
   display.print(humidStr);
-  
-  // Trend indicator di bawah (ganti progress bar)
-  drawTrendIndicator(display, boxX + 3, boxY + 42, humidity, prevHumidity);
 }
 
 void drawDecorativeDots(Adafruit_SH1106 &display, int frame) {

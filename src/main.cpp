@@ -19,7 +19,7 @@ const char *pw_wifi = "kurupukseblak";
 // ------------- DHT 22 -----------------------------------------------------------------------------------------------
 #define DHT_PIN 14
 DHT dht(DHT_PIN, DHT22);
-Timer printDHT(10000);
+Timer updateDataDHT(10000);
 float temperature = 0.0;
 float humidity = 0.0;
 
@@ -94,12 +94,17 @@ void loop(){
   int currentTouch = touchRead(4);
   unsigned long currentTime = millis();
 
-  if (printDHT.isReady()) {
-    temperature = dht.readTemperature();
-    humidity = dht.readHumidity();
-    // Update trend secara rasionil di sini
+  // Update data DHT and for trend
+  if (updateDataDHT.isReady()) {
     prevHumidity = humidity;
     prevTemperature = temperature;
+
+    temperature = dht.readTemperature();
+    humidity = dht.readHumidity();
+
+    debugPrintf("prevTemp: %0.2f  | Temp: %0.2f\n", prevTemperature, temperature);
+    debugPrintf("prevHumid: %0.2f  | Humid: %0.2f\n", prevHumidity, humidity);
+
   }
 
   // 2. VISUAL RENDERING (Tiap 80ms) - SATU-SATUNYA TEMPAT UNTUK OLED
@@ -118,11 +123,18 @@ void loop(){
     display.clearDisplay(); 
     display.setTextColor(WHITE);
     
+    // Decorative Display
     drawDecorativeDots(display, animFrame);
-    drawTemperatureSection(display, prevTemperature, temperature, breatheOffset);
-    drawHumiditySection(display, prevHumidity, humidity, breatheOffset);
+    drawTemperatureContainer(display, breatheOffset);
+    drawHumidityContainer(display, breatheOffset);
+
+    // Data Display
+    updateTempDisplay(display, temperature);
+    updateHumidDisplay(display, humidity);
+    drawTrendIndicator(display, 4, 45, temperature, prevTemperature);
+    drawTrendIndicator(display, 68, 45, humidity, prevHumidity);
     
-    display.display(); // Tampilkan HANYA setelah selesai menggambar
+    display.display();
   }
 
   // 3. DOT MATRIX (Tiap 1 detik)

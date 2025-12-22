@@ -6,8 +6,6 @@
 #include "time.h"
 #include <Wire.h>
 #include <SPI.h>
-// #include <Adafruit_GFX.h>
-// #include <Adafruit_SH1106.h>
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
 #include <SPI.h>

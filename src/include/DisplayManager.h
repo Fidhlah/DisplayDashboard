@@ -75,6 +75,7 @@ void drawTrendIndicator(Adafruit_SH1106 &display, int x, int y, float currentVal
 }
 
 void drawTemperatureSection(Adafruit_SH1106 &display, float prevTemperature, float temperature, int breathe) {
+  debugPrintf("prevTemp: %0.2f  | currTemp: %0.2f\n", prevTemperature, temperature);
   int boxWidth = 62;
   int boxHeight = 58;
   int boxX = 1;
@@ -99,11 +100,15 @@ void drawTemperatureSection(Adafruit_SH1106 &display, float prevTemperature, flo
   display.setCursor(boxX + (boxWidth - textWidth)/2, boxY + 18);
   display.print(tempStr);
   
-  // Trend indicator di bawah (ganti progress bar)
+  // Trend indicator di bawah
   drawTrendIndicator(display, boxX + 3, boxY + 42, temperature, prevTemperature);
 }
 
+
+
+
 void drawHumiditySection(Adafruit_SH1106 &display,float prevHumidity,float humidity,int breathe) {
+  debugPrintf("prevHumid: %0.2f | currHumid: %0.2f\n", prevHumidity, humidity);
   int boxWidth = 62;
   int boxHeight = 58;
   int boxX = 65;

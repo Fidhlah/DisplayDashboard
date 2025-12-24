@@ -10,20 +10,18 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
+#include <RTClib.h>
 
-void printLocalTime(MD_Parola &display, bool isColonVisible){
-  struct tm timeinfo;
+void printLocalTime(RTC_DS3231 rtc, MD_Parola &display, bool isColonVisible){
+  char time[6];
+  DateTime timeInfo = rtc.now();
 
-  if (!getLocalTime(&timeinfo)){
-    display.print("Failed!");   debugPrintln("Failed!");
-    return;
-  }
-  char timeString[10];
+  sprintf(time, "%02d%c%02d", timeInfo.hour(),(isColonVisible ? ':':' '), timeInfo.minute());
 
-  sprintf(timeString, "%02d%c%02d", timeinfo.tm_hour,(isColonVisible ? ':':' '), timeinfo.tm_min);
-
-  display.print(timeString);
+  display.print(time);
 }
+
+
 
 
 void drawThermometerIcon(Adafruit_SH1106G &display, int x, int y ) {
@@ -96,7 +94,7 @@ void drawTemperatureContainer(Adafruit_SH1106G &display, int breathe) {
   
 }
 
-void updateTempDisplay(Adafruit_SH1106G &display, float temperature){
+void updateDataTempDisplay(Adafruit_SH1106G &display, float temperature){
   // debugPrintf("UpdateTemp: %0.2f\n", temperature);
   int boxWidth = 62;
   int boxX = 1;
@@ -132,7 +130,7 @@ void drawHumidityContainer(Adafruit_SH1106G &display,int breathe) {
   
 }
 
-void updateHumidDisplay(Adafruit_SH1106G &display, float humidity){
+void updateDataHumidDisplay(Adafruit_SH1106G &display, float humidity){
   int boxWidth = 62;
   int boxHeight = 58;
   int boxX = 65;

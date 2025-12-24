@@ -19,15 +19,15 @@ const char *pw_wifi = "kurupukseblak";
 // ------------- DHT 22 -----------------------------------------------------------------------------------------------
 #define DHT_PIN 14
 DHT dht(DHT_PIN, DHT22);
-Timer updateDataDHT(10000);
+Timer updateDataDHT(10000); // 10s
 float temperature = 0.0;
 float humidity = 0.0;
 
-// ------------- Clock -----------------------------------------------------------------------------------------------
+// ------------- NTP -----------------------------------------------------------------------------------------------
 const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 7 * 3600;
 const int daylightOffset_sec = 0; // Indonesia tidak pakai Daylight Saving
-Timer printClock(1000);
+Timer printClock(1000); // Needed for colon blink
 bool showColon = true; 
 
 // ------------- Dot Matrix -----------------------------------------------------------------------------------------------
@@ -37,9 +37,9 @@ bool showColon = true;
 MD_Parola Dmatrix = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
 // ------------- OLED Display -----------------------------------------------------------------------------------------------
-Adafruit_SH1106 display(-1); 
-Timer breathEffect(80);
-Timer updateTrend(30000);
+Adafruit_SH1106G display = Adafruit_SH1106G(128, 64, &Wire, -1);
+Timer breathEffect(80);   //0.08s
+Timer updateTrend(30000); // 30s
 
 // Variabel animasi
 int animFrame = 0;
@@ -54,24 +54,30 @@ float prevHumidity = 0.0;
 unsigned long lastTrendUpdate = 0;
 const unsigned long TREND_INTERVAL = 30000;
 
-
-unsigned long onhowlong=0; 
+bool isDisplayOn = true;
+int howLongDisplayOn = 10000;
+Timer displayOn(howLongDisplayOn);
+int isDisplayInverted = false;
 
 // ------------- Touch Sensor -----------------------------------------------------------------------------------------------
 bool touched = false;
 int thresholdTouched = 35;
 int thresholdReleased = 50;
 Timer printTouch(1000);
-unsigned long howlongtouched = 0;
+unsigned long startTouch = 0;
+unsigned long howLongTouched = 0;
 
 
 // Start
 void setup(){
   debugBegin(115200);
+  
+  // Setup DHT
   dht.begin();
   
   // Setup Oled
-  display.begin(SH1106_SWITCHCAPVCC, 0x3C); 
+  display.begin(0x3c, true); 
+  display.setContrast(0);
   display.clearDisplay();
   display.display();
 
@@ -79,7 +85,6 @@ void setup(){
   Dmatrix.begin();
   Dmatrix.setTextAlignment(PA_CENTER); 
   Dmatrix.setIntensity(0);             
-  Dmatrix.displayClear();
   
   initWiFi(ssid_wifi, pw_wifi, Dmatrix);
   delay(1000);
@@ -107,37 +112,40 @@ void loop(){
 
   }
 
-  // 2. VISUAL RENDERING (Tiap 80ms) - SATU-SATUNYA TEMPAT UNTUK OLED
-  if (breathEffect.isReady()) {
-    // Logika animasi
-    if (breatheUp) {
-      breatheOffset++;
-      if (breatheOffset >= 3) breatheUp = false;
-    } else {
-      breatheOffset--;
-      if (breatheOffset <= 0) breatheUp = true;
+  // OLED Animation
+  if(isDisplayOn){
+    if (breathEffect.isReady()) {
+      if (breatheUp) {
+        breatheOffset++;
+        if (breatheOffset >= 3) breatheUp = false;
+      } else {
+        breatheOffset--;
+        if (breatheOffset <= 0) breatheUp = true;
+      }
+      animFrame++;
+
+      // PROSES DRAWING
+      display.clearDisplay(); 
+      display.setTextColor(SH110X_WHITE);
+      
+      // Decorative Display
+      drawTimeoutProgressBar(display, startTouch, 10000);
+      drawDecorativeDots(display, animFrame);
+      drawTemperatureContainer(display, breatheOffset);
+      drawHumidityContainer(display, breatheOffset);
+
+      // Data Display
+      updateTempDisplay(display, temperature);
+      updateHumidDisplay(display, humidity);
+      drawTrendIndicator(display, 4, 45, temperature, prevTemperature); // Temperature trend
+      drawTrendIndicator(display, 68, 45, humidity, prevHumidity);      // Humidity trend
+      
+      display.display();
     }
-    animFrame++;
 
-    // PROSES DRAWING (Wajib di dalam sini!)
-    display.clearDisplay(); 
-    display.setTextColor(WHITE);
-    
-    // Decorative Display
-    drawDecorativeDots(display, animFrame);
-    drawTemperatureContainer(display, breatheOffset);
-    drawHumidityContainer(display, breatheOffset);
-
-    // Data Display
-    updateTempDisplay(display, temperature);
-    updateHumidDisplay(display, humidity);
-    drawTrendIndicator(display, 4, 45, temperature, prevTemperature);
-    drawTrendIndicator(display, 68, 45, humidity, prevHumidity);
-    
-    display.display();
   }
-
-  // 3. DOT MATRIX (Tiap 1 detik)
+  
+  // Dot Matrix
   if (printClock.isReady()) {
     showColon = !showColon;
     printLocalTime(Dmatrix, showColon);
@@ -146,13 +154,29 @@ void loop(){
   if(currentTouch  < thresholdTouched && touched== false){
     debugPrintf("Disentuh! ");
     touched = true;
-    howlongtouched = millis();
+    isDisplayOn = true;
+
+    
+    display.invertDisplay(isDisplayInverted ? isDisplayInverted=false:isDisplayInverted=true);
+    display.oled_command(SH110X_DISPLAYON);
+
+    startTouch = millis();
+    displayOn.reset();
   }
 
   if(currentTouch  > thresholdReleased && touched == true) {
     debugPrintf("Dilepas\n");
     touched = false;
     debugPrint("Disentuh selama: ");
-    debugPrintln(millis() - howlongtouched);
+    howLongTouched = millis()-startTouch;
+    debugPrintln(howLongTouched);
+  }
+
+
+  if (isDisplayOn && displayOn.isReady()){
+      isDisplayOn = false;
+      display.clearDisplay();
+      display.display();
+      display.oled_command(SH110X_DISPLAYOFF); // Matikan panel secara fisik
   }
 }

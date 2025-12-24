@@ -17,6 +17,9 @@ void initWiFi(const char* ssid, const char* pass, MD_Parola &matrix) {
         debugPrint('.');
         matrix.print(loading);
         loading += ".";
+        if(loading.length() >= 11){
+            loading = ".";
+        }
 
         delay(1000);
     }

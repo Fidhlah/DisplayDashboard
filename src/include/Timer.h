@@ -22,6 +22,10 @@ class Timer {
       }
       return false;
     }
+
+    void reset() {
+      _prevMillis = millis();
+    }
 };
 
 #endif

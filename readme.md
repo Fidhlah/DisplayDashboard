@@ -1,6 +1,6 @@
 # DisplayDashboard: ESP32 Smart Clock with Environmental Monitoring
 
-![Hero Image](pict.jpeg)
+![Hero Image](docs/pict.jpeg)
 *Dual-display system: MAX7219 Dot Matrix (time) + SH1106 OLED (temp/humidity)*
 
 ---

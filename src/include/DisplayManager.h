@@ -12,7 +12,7 @@
 #include <Adafruit_SH110X.h>
 #include <RTClib.h>
 
-void printLocalTime(RTC_DS3231 rtc, MD_Parola &display, bool isColonVisible){
+void printLocalTime(RTC_DS3231 &rtc, MD_Parola &display, bool isColonVisible){
   char time[6];
   DateTime timeInfo = rtc.now();
 

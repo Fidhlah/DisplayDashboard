@@ -23,7 +23,7 @@ void initWiFi(const char* ssid, const char* pass, MD_Parola &matrix) {
     matrix.getGraphicObject()->setPoint(7, 0, false);
 
     if (WiFi.status() == WL_CONNECTED) {
-        debugPrintf("Connected! %s\n", WiFi.RSSI());
+        debugPrintf("Connected! %d\n", WiFi.RSSI());
     } else {
         debugPrintln("WiFi Timeout. Running on RTC only.");
     }
@@ -38,7 +38,7 @@ bool isInternetAvailable() {
     }
     return false;
 }
-bool syncNtpToRtc(RTC_DS3231 rtc){
+bool syncNtpToRtc(RTC_DS3231 &rtc){
     struct tm timeinfo;
     unsigned long startWait = millis();
     

@@ -51,6 +51,8 @@ int isDisplayInverted = false;
 // ************** Clock ********************************************************************************************
 // ------------- NTP -----------------------------------------------------------------------------------------------
 const char *ntpServer = "pool.ntp.org";
+const char *ntpServer2 = "id.pool.ntp.org";
+const char *ntpServer3 = "time.google.com";
 const long gmtOffset_sec = 7 * 3600;
 const int daylightOffset_sec = 0; // Indonesia tidak pakai Daylight Saving
 
@@ -103,7 +105,7 @@ void setup(){
   Dmatrix.setIntensity(0);             
   
   // Setup for NTP
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer, ntpServer2,ntpServer3);
   
   Dmatrix.displayClear();
   
@@ -209,5 +211,18 @@ void loop(){
       OLED.clearDisplay();
       OLED.display();
       OLED.oled_command(SH110X_DISPLAYOFF); // Matikan panel secara fisik
+  }
+  if(howLongTouched > 2000){
+    debugPrintln("SYNC start");
+    initWiFi(ssid_wifi, pw_wifi, Dmatrix);
+    
+    isLastSyncSuccess = syncNtpToRtc(rtc);
+
+    // Turn WiFi OFF
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+    syncTime.reset();
+
+    howLongTouched = 0;
   }
 }

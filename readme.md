@@ -58,14 +58,7 @@ This is a **personal fun project** to learn microcontroller fundamentals through
 | Power Supply | 5V 2A USB adapter | 1 | Powers entire system |
 
 ### Pinout Diagram
-
-| Component | Interface | ESP32 GPIO | Power | Notes |
-|-----------|-----------|------------|-------|-------|
-| Dot Matrix MAX7219 | SPI | DIN:23, CLK:18, CS:5 | 5V (VIN) | Uses hardware SPI (VSPI) |
-| OLED SH1106 | I2C | SDA:21, SCL:22 | 3.3V | **⚠️ NEVER use 5V** |
-| RTC DS3231 | I2C | SDA:21, SCL:22 | 3.3V | Shares I2C bus with OLED |
-| DHT22 Sensor | Digital (1-Wire) | Data:14 | 3.3V | Built-in pull-up resistor |
-| Touch Sensor | Capacitive | GPIO 4 | - | Bare wire acts as touch pad |
+[See Pinout Diagram](architecture.md)
 
 ### Wiring Diagram
 
@@ -255,7 +248,9 @@ These will auto-install via PlatformIO:
 ![](docs/2.jpeg)
 ![](docs/3.jpeg)
 ![](docs/4.jpeg)
-![](docs/5.mp4)
+<video src="docs/5.mp4" width="400" controls>
+  Video tidak mendukung browser Anda.
+</video>
 
 ![Breadboard Assembly](docs/images/build_01.jpg)
 

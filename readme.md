@@ -248,7 +248,9 @@ These will auto-install via PlatformIO:
 ![](docs/2.jpeg)
 ![](docs/3.jpeg)
 ![](docs/4.jpeg)
-https://github.com/user-attachments/assets/434f88be-e725-4ad3-9894-4af0a2b3eef5
+<video src="https://github.com/user-attachments/assets/434f88be-e725-4ad3-9894-4af0a2b3eef5" width="100%" controls>
+  Browser kamu tidak mendukung pemutar video ini.
+</video>
 
 
 
